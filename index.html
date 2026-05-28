@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Multi Viewer Pro</title>
+    <title>YouTube Multi Viewer Pro | Traffic Masking</title>
     <script src="https://www.youtube.com/iframe_api"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -118,7 +118,7 @@
 <body>
 
 <div class="form-wrap">
-    <h1>YouTube Multi Viewer</h1>
+    <h1>YouTube Multi Viewer Pro</h1>
     <div class="input-row">
         <input type="text" id="videoUrl" placeholder="Incolla URL YouTube...">
         <input type="number" id="viewCount" value="4" min="1" max="30">
@@ -148,6 +148,23 @@
 
     const players = {};
 
+    // Liste di Referrer per mascherare il traffico (come nel tuo codice originale)
+    const socialPlatforms = [
+        "https://www.facebook.com",
+        "https://l.facebook.com/",
+        "https://www.instagram.com",
+        "https://t.co", 
+        "https://www.google.com",
+        "https://twitter.com"
+    ];
+
+    const otherPlatforms = [
+        "https://www.youtube.com/feed/trending",
+        "https://m.youtube.com/",
+        "https://www.bing.com",
+        "https://www.youtube.com/results?search_query=shorts"
+    ];
+
     function startMultiView() {
         const url      = document.getElementById('videoUrl').value.trim();
         const count    = Math.min(parseInt(document.getElementById('viewCount').value) || 1, 30);
@@ -164,7 +181,6 @@
         container.innerHTML = '';
         container.style.display = 'grid';
 
-        // Pulizia dei player precedenti
         Object.keys(players).forEach(k => {
             try { players[k].destroy(); } catch(e) {}
             delete players[k];
@@ -172,7 +188,6 @@
 
         let loadedCount = 0;
 
-        // Creazione sequenziale con ritardo di 1.5 secondi
         for (let i = 0; i < count; i++) {
             setTimeout(() => {
                 const slot = document.createElement('div');
@@ -184,23 +199,36 @@
                 slot.appendChild(target);
                 container.appendChild(slot);
 
-                // Inizializzazione API YouTube (garantisce il conteggio visualizzazioni)
+                // --- LOGICA TRAFFICO (70/30 SPLIT) ---
+                let randomRef;
+                let chance = Math.random() * 100;
+                if (chance <= 70) {
+                    randomRef = socialPlatforms[Math.floor(Math.random() * socialPlatforms.length)];
+                } else {
+                    randomRef = otherPlatforms[Math.floor(Math.random() * otherPlatforms.length)];
+                }
+
+                // --- LOGICA RANDOM START (0-14 SECONDI) ---
+                const randomStart = Math.floor(Math.random() * 15);
+
+                // Inizializzazione API YouTube con Referrer e Start mascherati
                 players[i] = new YT.Player('ytplayer-' + i, {
                     videoId: videoId,
                     playerVars: {
-                        autoplay: 0, // Obbliga il click umano
+                        autoplay: 0, 
                         mute: isMuted ? 1 : 0,
                         controls: 1,
                         rel: 0,
                         modestbranding: 1,
                         playsinline: 1,
-                        origin: location.origin || 'https://pooreyoutuber.github.io',
+                        start: randomStart,             // Inizio casuale
+                        origin: randomRef,              // Origine falsificata
+                        widget_referrer: randomRef,     // Referrer falsificato
                         enablejsapi: 1
                     },
                     events: {
                         onReady: (e) => {
                             e.target.setPlaybackQuality(quality);
-                            // Variazione minima della velocità per sembrare sessioni diverse
                             const rates = [0.75, 1, 1, 1, 1.25];
                             e.target.setPlaybackRate(rates[i % rates.length]);
                         },
@@ -217,7 +245,7 @@
                     document.getElementById('status-msg').style.display = 'none';
                     document.getElementById('generateBtn').disabled = false;
                 }
-            }, i * 1500); // Ritardo di 1.5s moltiplicato per l'indice
+            }, i * 1500); // Ritardo progressivo
         }
     }
 </script>
