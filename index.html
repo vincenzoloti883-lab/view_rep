@@ -40,7 +40,7 @@
 
         .hero-section {
             padding: 40px 20px;
-            max-width: 1200px;
+            max-width: 1400px;
             margin: auto;
             text-align: center;
         }
@@ -93,33 +93,31 @@
         #players {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
-            gap: 20px;
+            gap: 25px;
             margin-top: 40px;
             display: none;
         }
         
-        #players div {
-            width: 100%;
-            aspect-ratio: 16/9;
+        .player-wrapper {
+            background: #000;
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            background: #000;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            position: relative;
         }
         
-        iframe {
+        .player-iframe {
             width: 100%;
-            aspect-ratio: 16/9;
-            border-radius: 12px;
+            height: 100%;
             border: none;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: block;
         }
 
         @media (max-width: 1024px) {
             #players {
                 grid-template-columns: repeat(2, 1fr) !important; 
-                gap: 15px;
-                padding: 10px;
+                gap: 20px;
+                padding: 15px;
             }
             .input-group {
                 display: flex;
@@ -186,18 +184,15 @@
         const videoId = getID(url);
         const playerContainer = document.getElementById('players');
         
-        // REINSERITO: L'elenco originale delle piattaforme
-        const platforms = [
-            "https://www.youtube.com/feed/trending",
-            "https://www.youtube.com/feed/subscriptions",
-            "https://m.youtube.com/",
-            "https://www.youtube.com/results?search_query=shorts",
-            "https://www.youtube.com/search",
-            "https://www.google.com",
-            "https://www.facebook.com",
-            "https://www.instagram.com",
-            "https://t.co", // Twitter/X
-            "https://www.bing.com"
+        // ORIGINI REALISTICHE - Solo domini YouTube per evitare blocchi ads
+        const youtubeOrigins = [
+            "https://www.youtube.com",
+            "https://m.youtube.com",
+            "https://youtube.com",
+            "https://www.youtube-nocookie.com",
+            "https://gaming.youtube.com",
+            "https://music.youtube.com",
+            "https://studio.youtube.com"
         ];
 
         if (!videoId) {
@@ -209,56 +204,110 @@
         playerContainer.style.display = 'grid';
 
         for (let i = 0; i < count; i++) {
-            let playerId = 'player-' + i;
-            let div = document.createElement('div');
-            div.id = playerId;
-            playerContainer.appendChild(div);
+            // DIMENSIONI RANDOM REALISTICHE (minimo 400x225 per ads)
+            const baseWidth = 400 + Math.floor(Math.random() * 400); // 400-800px
+            const height = Math.floor(baseWidth * 9/16); // Mantiene 16:9
+            
+            const playerWrapper = document.createElement('div');
+            playerWrapper.className = 'player-wrapper';
+            playerWrapper.style.width = baseWidth + 'px';
+            playerWrapper.style.height = height + 'px';
+            playerWrapper.style.minWidth = '400px';
+            playerWrapper.style.minHeight = '225px';
+            
+            const playerDiv = document.createElement('div');
+            playerDiv.id = 'player-' + i;
+            playerDiv.className = 'player-iframe';
+            playerWrapper.appendChild(playerDiv);
+            playerContainer.appendChild(playerWrapper);
 
-            // REINSERITO: Selezione casuale piattaforma e tempo di inizio
-            const randomRef = platforms[Math.floor(Math.random() * platforms.length)];
-            const randomStart = Math.floor(Math.random() * 15);
-         
-            // API di YouTube: Qui gestisci le variabili dell'iframe
-            new YT.Player(playerId, {
+            // Selezione casuale origine YouTube
+            const randomOrigin = youtubeOrigins[Math.floor(Math.random() * youtubeOrigins.length)];
+            const randomStart = Math.floor(Math.random() * 20);
+
+            // PARAMETRI PLAYER MODIFICATI PER FORZARE ADS
+            new YT.Player(playerDiv, {
                 height: '100%',
                 width: '100%',
                 videoId: videoId,
                 playerVars: {
-                    'autoplay': 0,
+                    'autoplay': isMuted ? 1 : 0, // Autoplay se muto (richiesto per ads)
                     'mute': isMuted ? 1 : 0,
                     'vq': selectedQuality,
-                    'rel': 0,
+                    'rel': 1, // Mostra video correlati (più organico)
                     'controls': 1,
-                    'modestbranding': 1,
-                    'start': randomStart,             // REINSERITO: Tempo avvio
-                    'origin': randomRef,              // REINSERITO: Origine falsa
-                    'playlist': videoId,
-                    'widget_referrer': randomRef      // REINSERITO: Referrer falso
+                    'modestbranding': 0, // Mostra branding YouTube (più legittimo)
+                    'start': randomStart,
+                    'origin': randomOrigin,
+                    'widget_referrer': randomOrigin,
+                    'enablejsapi': 1, // Abilita JS API per ads
+                    'iv_load_policy': 3, // Mostra annotazioni e ads
+                    'playsinline': 1, // Riproduzione inline per mobile
+                    'fs': 1, // Permette fullscreen
+                    'autohide': 1, // Nasconde controlli durante riproduzione
+                    'showinfo': 0,
+                    'cc_load_policy': 0
                 },
                 events: {
                     'onReady': function(event) {
+                        // Imposta qualità
                         event.target.setPlaybackQuality(selectedQuality);
                         
-                        // REINSERITO: Velocità di riproduzione variabile
-                        const speeds = [0.75, 1, 1, 1.25];
-                        event.target.setPlaybackRate(speeds[Math.floor(Math.random() * speeds.length)]);
-                        
+                        // Volume realistico se non muto
                         if (!isMuted) {
                             event.target.unMute();
-                            event.target.setVolume(100);
-                        } else {
-                            event.target.mute();
+                            event.target.setVolume(70 + Math.floor(Math.random() * 30)); // 70-100%
                         }
+                        
+                        // Avvia riproduzione se autoplay non parte
+                        setTimeout(() => {
+                            if (event.target.getPlayerState() !== YT.PlayerState.PLAYING) {
+                                event.target.playVideo();
+                            }
+                        }, 1000 + Math.random() * 2000);
                     },
                     'onStateChange': function(event) {
+                        // Mantiene qualità durante riproduzione
                         if (event.data == YT.PlayerState.PLAYING) {
                             event.target.setPlaybackQuality(selectedQuality);
                         }
+                        // Riavvia video se finisce (loop organico)
+                        if (event.data == YT.PlayerState.ENDED) {
+                            setTimeout(() => {
+                                event.target.seekTo(Math.floor(Math.random() * 10));
+                                event.target.playVideo();
+                            }, 3000 + Math.random() * 5000);
+                        }
+                    },
+                    'onError': function(error) {
+                        console.log('Player error:', error);
                     }
                 }
             });
+
+            // AGGIUNTA ATTRIBUTI IFRAME DIRETTI per mimare browser reali
+            setTimeout(() => {
+                const iframe = playerDiv.querySelector('iframe');
+                if (iframe) {
+                    iframe.setAttribute('allow', 'autoplay; encrypted-media; fullscreen');
+                    iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+                    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups');
+                    iframe.setAttribute('title', 'YouTube video player');
+                    iframe.setAttribute('loading', 'lazy');
+                }
+            }, 500);
         }
     }
+
+    // Inizializzazione automatica se URL presente nell'URL
+    window.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const autoUrl = urlParams.get('url');
+        if (autoUrl) {
+            document.getElementById('videoUrl').value = autoUrl;
+            setTimeout(startMultiView, 1000);
+        }
+    });
 </script>
 </body>
 </html>
