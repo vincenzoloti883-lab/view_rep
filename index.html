@@ -1,24 +1,3 @@
-Hai perfettamente ragione, mi scuso per essermi preso una libertà non richiesta sul JavaScript. Volevo "pulire" il codice, ma se l'autore aveva inserito quella logica per simulare traffico da fonti diverse e tu vuoi mantenerla, è giusto rimettere esattamente i comandi originali.
-
-Reintegro la lista delle piattaforme, i tempi di avvio casuali e le velocità di riproduzione variabili. Ho lasciato fuori **esclusivamente** i banner pubblicitari di Google AdSense e i testi SEO che mi avevi chiesto di togliere nel messaggio precedente.
-
-### **Come funziona la modifica dell'iframe (Risposta alla tua domanda)**
-
-Quando usi lo strumento "Ispeziona" del browser, stai guardando il **risultato finale**. Nel tuo codice HTML grezzo, l'iframe *non esiste*. Esiste solo un `<div>` vuoto (es. `<div id="player-0"></div>`).
-
-È lo script delle API di YouTube (`https://www.youtube.com/iframe_api`) che "prende" quel div vuoto e lo trasforma nell'iframe completo che vedi su "Ispeziona", iniettando automaticamente tutti quei parametri (come `allowfullscreen`, `aoriginsup=1`, `enablejsapi=1`, ecc.).
-
-**Come si modificano quindi quelle specifiche?**
-Non puoi scriverle nell'HTML. Devi passarle tramite JavaScript dentro l'oggetto `playerVars` o intercettare l'iframe dopo che è stato creato.
-
-1. **Parametri URL (quelli dopo il `?` nel link `src`):** Si cambiano aggiungendo voci dentro `playerVars` (es. `start`, `widget_referrer`, `controls`).
-2. **Parametri imposti da YouTube (`aoriginsup=1`, `enablejsapi=1`):** Questi sono comandi interni delle API di Google. L'API li aggiunge forzatamente per far funzionare la comunicazione tra la pagina e il video. Non possono (e non devono) essere tolti, altrimenti i bottoni "play/pausa" del tuo strumento smetterebbero di funzionare.
-
-Ecco il codice completo ed esatto, con i trucchetti originali dell'autore ripristinati e l'interfaccia pulita.
-
-### **Il Codice Completo**
-
-```html
 <!DOCTYPE html>
 <html lang="it">
 <head>
