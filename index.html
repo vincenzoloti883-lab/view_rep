@@ -184,16 +184,9 @@
         const videoId = getID(url);
         const playerContainer = document.getElementById('players');
         
-        // ORIGINI REALISTICHE - Solo domini YouTube per evitare blocchi ads
-        const youtubeOrigins = [
-            "https://www.youtube.com",
-            "https://m.youtube.com",
-            "https://youtube.com",
-            "https://www.youtube-nocookie.com",
-            "https://gaming.youtube.com",
-            "https://music.youtube.com",
-            "https://studio.youtube.com"
-        ];
+        // CORREZIONE: Usa il dominio reale del tuo sito. 
+        // Fingere di essere YouTube fa scattare i filtri anti-frode e disabilita le pubblicità.
+        const realOrigin = window.location.origin;
 
         if (!videoId) {
             alert("Per favore inserisci un URL YouTube valido");
@@ -204,9 +197,9 @@
         playerContainer.style.display = 'grid';
 
         for (let i = 0; i < count; i++) {
-            // DIMENSIONI RANDOM REALISTICHE (minimo 400x225 per ads)
-            const baseWidth = 400 + Math.floor(Math.random() * 400); // 400-800px
-            const height = Math.floor(baseWidth * 9/16); // Mantiene 16:9
+            // Le dimensioni restano invariate (i player troppo piccoli non mostrano ads)
+            const baseWidth = 400 + Math.floor(Math.random() * 400); 
+            const height = Math.floor(baseWidth * 9/16); 
             
             const playerWrapper = document.createElement('div');
             playerWrapper.className = 'player-wrapper';
@@ -221,45 +214,40 @@
             playerWrapper.appendChild(playerDiv);
             playerContainer.appendChild(playerWrapper);
 
-            // Selezione casuale origine YouTube
-            const randomOrigin = youtubeOrigins[Math.floor(Math.random() * youtubeOrigins.length)];
             const randomStart = Math.floor(Math.random() * 20);
 
-            // PARAMETRI PLAYER MODIFICATI PER FORZARE ADS
+            // PARAMETRI CORRETTI PER CONSENTIRE LE ADS
             new YT.Player(playerDiv, {
                 height: '100%',
                 width: '100%',
                 videoId: videoId,
                 playerVars: {
-                    'autoplay': isMuted ? 1 : 0, // Autoplay se muto (richiesto per ads)
+                    'autoplay': 0, // L'autoplay è avviato sotto tramite script
                     'mute': isMuted ? 1 : 0,
                     'vq': selectedQuality,
-                    'rel': 1, // Mostra video correlati (più organico)
+                    'rel': 1, 
                     'controls': 1,
-                    'modestbranding': 0, // Mostra branding YouTube (più legittimo)
+                    'modestbranding': 0, 
                     'start': randomStart,
-                    'origin': randomOrigin,
-                    'widget_referrer': randomOrigin,
-                    'enablejsapi': 1, // Abilita JS API per ads
-                    'iv_load_policy': 3, // Mostra annotazioni e ads
-                    'playsinline': 1, // Riproduzione inline per mobile
-                    'fs': 1, // Permette fullscreen
-                    'autohide': 1, // Nasconde controlli durante riproduzione
+                    'origin': realOrigin, // Origine reale
+                    'widget_referrer': window.location.href, // Referrer reale
+                    'enablejsapi': 1, 
+                    'iv_load_policy': 1, // 1 mostra annotazioni/ads (3 le nascondeva)
+                    'playsinline': 1, 
+                    'fs': 1, 
+                    'autohide': 1, 
                     'showinfo': 0,
                     'cc_load_policy': 0
                 },
                 events: {
                     'onReady': function(event) {
-                        // Imposta qualità
                         event.target.setPlaybackQuality(selectedQuality);
                         
-                        // Volume realistico se non muto
                         if (!isMuted) {
                             event.target.unMute();
-                            event.target.setVolume(70 + Math.floor(Math.random() * 30)); // 70-100%
+                            event.target.setVolume(70 + Math.floor(Math.random() * 30));
                         }
                         
-                        // Avvia riproduzione se autoplay non parte
                         setTimeout(() => {
                             if (event.target.getPlayerState() !== YT.PlayerState.PLAYING) {
                                 event.target.playVideo();
@@ -267,11 +255,9 @@
                         }, 1000 + Math.random() * 2000);
                     },
                     'onStateChange': function(event) {
-                        // Mantiene qualità durante riproduzione
                         if (event.data == YT.PlayerState.PLAYING) {
                             event.target.setPlaybackQuality(selectedQuality);
                         }
-                        // Riavvia video se finisce (loop organico)
                         if (event.data == YT.PlayerState.ENDED) {
                             setTimeout(() => {
                                 event.target.seekTo(Math.floor(Math.random() * 10));
@@ -285,13 +271,14 @@
                 }
             });
 
-            // AGGIUNTA ATTRIBUTI IFRAME DIRETTI per mimare browser reali
             setTimeout(() => {
                 const iframe = playerDiv.querySelector('iframe');
                 if (iframe) {
                     iframe.setAttribute('allow', 'autoplay; encrypted-media; fullscreen');
                     iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
-                    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups');
+                    
+                    // L'attributo 'sandbox' rimosso per permettere gli script di Google Ads
+                    
                     iframe.setAttribute('title', 'YouTube video player');
                     iframe.setAttribute('loading', 'lazy');
                 }
@@ -299,7 +286,6 @@
         }
     }
 
-    // Inizializzazione automatica se URL presente nell'URL
     window.addEventListener('DOMContentLoaded', function() {
         const urlParams = new URLSearchParams(window.location.search);
         const autoUrl = urlParams.get('url');
