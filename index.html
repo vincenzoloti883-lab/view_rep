@@ -1,225 +1,203 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Multi Viewer Pro</title>
-    <script src="https://www.youtube.com/iframe_api"></script>
+    <title>Convertitore Storico Euro - Lire con Inflazione</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            font-family: system-ui, sans-serif;
-            background: #0f172a;
-            color: #fff;
-            min-height: 100vh;
-            padding: 30px 20px;
+        :root {
+            --primary: #0284c7;
+            --primary-dark: #0369a1;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #0f172a;
+            --border: #e2e8f0;
         }
 
-        .form-wrap {
-            max-width: 900px;
-            margin: 0 auto 40px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: var(--card-bg);
+            padding: 30px;
             border-radius: 16px;
-            padding: 28px 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            max-width: 450px;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         h1 {
-            font-size: 22px;
-            font-weight: 700;
+            font-size: 24px;
+            margin-top: 0;
+            text-align: center;
+            color: var(--primary);
+        }
+
+        p.subtitle {
+            text-align: center;
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
             margin-bottom: 20px;
-            color: #f1f5f9;
         }
 
-        .input-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            align-items: stretch;
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
         }
-
-        .input-row input[type="text"] { flex: 1 1 260px; min-width: 0; }
-        .input-row input[type="number"] { width: 80px; flex: 0 0 80px; }
-        .input-row select { flex: 1 1 140px; min-width: 0; }
 
         input, select {
-            padding: 11px 14px;
-            border: 1px solid rgba(255,255,255,0.15);
-            border-radius: 10px;
-            font-size: 15px;
-            background: rgba(255,255,255,0.07);
-            color: #fff;
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
             outline: none;
             transition: border-color 0.2s;
         }
 
-        input:focus, select:focus { border-color: #38bdf8; }
-        select option { background: #1e293b; color: #fff; }
+        input:focus, select:focus {
+            border-color: var(--primary);
+        }
 
-        button {
-            padding: 11px 26px;
-            background: #ef4444;
-            color: #fff;
-            border: none;
-            border-radius: 10px;
-            font-size: 15px;
+        .result-box {
+            background-color: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 25px;
+            display: none;
+        }
+
+        .result-title {
+            font-size: 13px;
+            color: #166534;
+            text-transform: uppercase;
             font-weight: 700;
-            cursor: pointer;
-            transition: background 0.2s, transform 0.15s;
-            flex: 0 0 auto;
+            margin-bottom: 5px;
         }
 
-        button:hover { background: #dc2626; transform: translateY(-1px); }
-
-        #status-msg {
-            text-align: center;
-            color: #fbbf24;
-            margin-bottom: 20px;
-            font-weight: 600;
-            display: none;
+        .result-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #14532d;
         }
 
-        #players {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: none;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 16px;
+        .info-text {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 10px;
+            line-height: 1.4;
         }
-
-        .player-slot {
-            position: relative;
-            width: 100%;
-            aspect-ratio: 16/9;
-            border-radius: 12px;
-            overflow: hidden;
-            background: #000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            opacity: 0;
-            animation: fadeIn 0.5s forwards;
-        }
-
-        @keyframes fadeIn { to { opacity: 1; } }
-
-        .player-slot > div, .player-slot iframe {
-            position: absolute !important;
-            top: 0; left: 0;
-            width: 100% !important;
-            height: 100% !important;
-            border: none;
-        }
-
-        @media (max-width: 1100px) { #players { grid-template-columns: repeat(3, 1fr); } }
-        @media (max-width: 700px) { #players { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 440px) { #players { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
-<div class="form-wrap">
-    <h1>YouTube Multi Viewer</h1>
-    <div class="input-row">
-        <input type="text" id="videoUrl" placeholder="Incolla URL YouTube...">
-        <input type="number" id="viewCount" value="4" min="1" max="30">
-        <select id="audioSetting">
-            <option value="1">Muto</option>
-            <option value="0" selected>Audio attivo (Consigliato per Ads)</option>
+<div class="container">
+    <h1>Euro ↔ Lire Storico</h1>
+    <p class="subtitle">Calcola il valore reale della moneta includendo la svalutazione e l'inflazione storica italiana.</p>
+
+    <div class="form-group">
+        <label for="direction">Tipo di conversione</label>
+        <select id="direction" onchange="convert()">
+            <option value="eurToLit">Da Euro di oggi a Lire del passato</option>
+            <option value="litToEur">Da Lire del passato a Euro di oggi</option>
         </select>
-        <select id="qualitySetting">
-            <option value="default">Auto</option>
-            <option value="small">240p</option>
-            <option value="medium">360p</option>
-            <option value="hd720">720p</option>
+    </div>
+
+    <div class="form-group">
+        <label for="amount">Importo</label>
+        <input type="number" id="amount" placeholder="Inserisci la cifra..." min="0" step="0.01" oninput="convert()">
+    </div>
+
+    <div class="form-group">
+        <label for="year">Anno di riferimento del passato</label>
+        <select id="year" onchange="convert()">
+            <!-- I coefficienti simulano la svalutazione/rivalutazione storica rispetto all'introduzione dell'Euro -->
+            <option value="2001">2001 (Ultimo anno della Lira)</option>
+            <option value="1995">1995</option>
+            <option value="1990">1990</option>
+            <option value="1985">1985</option>
+            <option value="1980">1980</option>
+            <option value="1970">1970</option>
+            <option value="1960">1960</option>
         </select>
-        <button id="generateBtn" onclick="startMultiView()">Genera Player</button>
+    </div>
+
+    <div class="result-box" id="resultBox">
+        <div class="result-title" id="resultTitle">Risultato della conversione</div>
+        <div class="result-value" id="resultValue">-</div>
+        <div class="info-text" id="infoText"></div>
     </div>
 </div>
 
-<div id="status-msg">Generazione player in corso. Attendi...</div>
-<div id="players"></div>
-
 <script>
-    function getVideoId(url) {
-        const r = /(?:youtu\.be\/|v=|\/v\/|embed\/|shorts\/)([A-Za-z0-9_-]{11})/;
-        const m = url.match(r);
-        return m ? m[1] : null;
-    }
+    // Coefficienti di rivalutazione monetaria basati su dati storici ISTAT 
+    // (Valore che un milione di lire dell'anno X ha nei confronti del potere d'acquisto al momento del cambio del 2002)
+    const inflationCoefficients = {
+        "2001": 1.02,
+        "1995": 1.28,
+        "1990": 1.62,
+        "1985": 2.24,
+        "1980": 3.95,
+        "1970": 11.20,
+        "1960": 21.80
+    };
 
-    const players = {};
+    const CHANGE_RATE = 1936.27;
 
-    function startMultiView() {
-        const url      = document.getElementById('videoUrl').value.trim();
-        const count    = Math.min(parseInt(document.getElementById('viewCount').value) || 1, 30);
-        const isMuted  = document.getElementById('audioSetting').value === '1';
-        const quality  = document.getElementById('qualitySetting').value;
-        const videoId  = getVideoId(url);
+    function convert() {
+        const direction = document.getElementById('direction').value;
+        const amount = parseFloat(document.getElementById('amount').value);
+        const year = document.getElementById('year').value;
+        
+        const resultBox = document.getElementById('resultBox');
+        const resultValue = document.getElementById('resultValue');
+        const infoText = document.getElementById('infoText');
 
-        if (!videoId) { alert('URL YouTube non valido.'); return; }
+        if (isNaN(amount) || amount <= 0) {
+            resultBox.style.display = 'none';
+            return;
+        }
 
-        document.getElementById('generateBtn').disabled = true;
-        document.getElementById('status-msg').style.display = 'block';
+        resultBox.style.display = 'block';
+        const coef = inflationCoefficients[year];
 
-        const container = document.getElementById('players');
-        container.innerHTML = '';
-        container.style.display = 'grid';
+        if (direction === "eurToLit") {
+            // Da Euro di oggi a Lire del passato (considerando la perdita di potere d'acquisto)
+            // Più si va indietro, più i prezzi nominali erano bassi, quindi servivano "meno" lire per lo stesso potere d'acquisto
+            const lireFisse = amount * CHANGE_RATE;
+            const lireStoriche = lireFisse / coef;
 
-        // Pulizia dei player precedenti
-        Object.keys(players).forEach(k => {
-            try { players[k].destroy(); } catch(e) {}
-            delete players[k];
-        });
+            resultValue.innerText = Math.round(lireStoriche).toLocaleString('it-IT') + " Lire";
+            infoText.innerText = `Spiegazione: ${amount.toLocaleString('it-IT')} € di oggi corrispondono come potere d'acquisto a circa ${Math.round(lireStoriche).toLocaleString('it-IT')} Lire nel ${year}. Al tasso fisso senza inflazione sarebbero state invece ${Math.round(lireFisse).toLocaleString('it-IT')} Lire.`;
+        
+        } else {
+            // Da Lire del passato a Euro di oggi (Rivalutazione del potere d'acquisto di quelle vecchie Lire)
+            const euroFissi = amount / CHANGE_RATE;
+            const euroOggi = euroFissi * coef;
 
-        let loadedCount = 0;
-
-        // Creazione sequenziale con ritardo di 1.5 secondi
-        for (let i = 0; i < count; i++) {
-            setTimeout(() => {
-                const slot = document.createElement('div');
-                slot.className = 'player-slot';
-                slot.id = 'slot-' + i;
-
-                const target = document.createElement('div');
-                target.id = 'ytplayer-' + i;
-                slot.appendChild(target);
-                container.appendChild(slot);
-
-                // Inizializzazione API YouTube (garantisce il conteggio visualizzazioni)
-                players[i] = new YT.Player('ytplayer-' + i, {
-                    videoId: videoId,
-                    playerVars: {
-                        autoplay: 0, // Obbliga il click umano
-                        mute: isMuted ? 1 : 0,
-                        controls: 1,
-                        rel: 0,
-                        modestbranding: 1,
-                        playsinline: 1,
-                        origin: location.origin || 'https://pooreyoutuber.github.io',
-                        enablejsapi: 1
-                    },
-                    events: {
-                        onReady: (e) => {
-                            e.target.setPlaybackQuality(quality);
-                            // Variazione minima della velocità per sembrare sessioni diverse
-                            const rates = [0.75, 1, 1, 1, 1.25];
-                            e.target.setPlaybackRate(rates[i % rates.length]);
-                        },
-                        onStateChange: (e) => {
-                            if (e.data === YT.PlayerState.PLAYING) {
-                                e.target.setPlaybackQuality(quality);
-                            }
-                        }
-                    }
-                });
-
-                loadedCount++;
-                if (loadedCount === count) {
-                    document.getElementById('status-msg').style.display = 'none';
-                    document.getElementById('generateBtn').disabled = false;
-                }
-            }, i * 1500); // Ritardo di 1.5s moltiplicato per l'indice
+            resultValue.innerText = euroOggi.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+            infoText.innerText = `Spiegazione: Chi possedeva ${amount.toLocaleString('it-IT')} Lire nel ${year}, oggi avrebbe un potere d'acquisto equivalente a ben ${euroOggi.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €. Il semplice cambio fisso senza inflazione calcolerebbe solo ${euroFissi.toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €.`;
         }
     }
 </script>
+
 </body>
 </html>
